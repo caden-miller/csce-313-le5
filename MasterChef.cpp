@@ -88,6 +88,7 @@ static void timerHandler( int sig, siginfo_t *si, void *uc )
 	/* TODO This Section - 2 */
 	// Officially complete the step using completedSteps and completeCount
 
+
 	// Ready to remove that dependency, call the trigger for the appropriate handler
 	/* End Section - 2 */
 }
@@ -125,7 +126,23 @@ int main(int argc, char **argv)
 	/* TODO This Section - 1 */
 	// Associate the signal SIGRTMIN with the sa using the sigaction function
 	// Associate the appropriate handler with the SIGUSR1 signal, for removing dependencies
-	
+	sigaction(SIGRTMIN, &sa, NULL);
+	signal(SIGUSR1, RemoveDepHandler);
+	while (recipeSteps.GetReadySteps()->size() > 0) {
+		// For each step that is ready to be run, create a timer for it
+		Step* step = recipeSteps.GetReadySteps()->at(0);
+		makeTimer(step, step->duration);
+
+
+		// and mark it as running
+		// and remove it from the list of ready steps
+		// and add it to the list of completed steps
+		// and increment the count of completed steps
+		// and print out that the step has started
+		// and print out that the step has completed
+		// and trigger the remove dependency handler
+
+	}
 	// Until all steps have been completed, check if steps are ready to be run and create a timer for them if so
 	/* End Section - 1 */
 
