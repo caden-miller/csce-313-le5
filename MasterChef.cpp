@@ -79,33 +79,34 @@ void makeTimer( Step *timerID, int expire) // Given
 // the siginfo_t* pointer holds the step information in the si_value.sival_ptr
 // You will need to print out that the step has completed
 // Mark the step to be removed as a dependency, and trigger the remove dep handler.
-// TO COMPLETE Section 2
 static void timerHandler( int sig, siginfo_t *si, void *uc )
 {
 	// Retrieve timer pointer from the si->si_value
     Step* comp_item = (Step*)si->si_value.sival_ptr;
 
-	/* TODO This Section - 2 */
 	// Officially complete the step using completedSteps and completeCount
-
+	completedSteps->push_back(comp_item->id);
+	++completeCount;
+	// Print completed step
+	comp_item->PrintComplete();
+	// Call RemoveDepHandler()
+	raise(SIGUSR1);
 
 	// Ready to remove that dependency, call the trigger for the appropriate handler
-	/* End Section - 2 */
 }
 
 // Removes the copmleted steps from the dependency list of the step list.
 // Utilize the completedSteps vector and the RemoveDependency method.
-// To Complete - Section 3
 void RemoveDepHandler(int sig) {
-	/* TODO This Section - 3 */
-	// Foreach step that has been completed since last run, remove it as a dependency
-	/* End Section - 3 */
+	// For each step that has been completed since last run, remove it as a dependency
+	for (size_t i = 0; i < completedSteps->size(); ++i) {
+		recipeSteps->RemoveDependency(completedSteps->at(i));
+	}	
 }
 
 // Associate the signals to the signal handlers as appropriate
 // Continuously check what steps are ready to be run, and start timers for them with makeTimer()
 // run until all steps are done.
-// To Complete - Section 1
 int main(int argc, char **argv)
 {
 	string input_file = ProcessArgs(argc, argv);
@@ -123,28 +124,22 @@ int main(int argc, char **argv)
     sa.sa_sigaction = timerHandler;
     sigemptyset(&sa.sa_mask);
 
-	/* TODO This Section - 1 */
-	// Associate the signal SIGRTMIN with the sa using the sigaction function
-	// Associate the appropriate handler with the SIGUSR1 signal, for removing dependencies
+	// Associate the signal SIGRTMIN with the sa struct, for the timerHandler
+	// Associate the RemoveDepHandler with the SIGUSR1 signal, for removing dependencies
 	sigaction(SIGRTMIN, &sa, NULL);
 	signal(SIGUSR1, RemoveDepHandler);
-	while (recipeSteps.GetReadySteps()->size() > 0) {
-		// For each step that is ready to be run, create a timer for it
-		Step* step = recipeSteps.GetReadySteps()->at(0);
-		makeTimer(step, step->duration);
-
-
-		// and mark it as running
-		// and remove it from the list of ready steps
-		// and add it to the list of completed steps
-		// and increment the count of completed steps
-		// and print out that the step has started
-		// and print out that the step has completed
-		// and trigger the remove dependency handler
-
+	// While there are still steps to be completed
+	while (completeCount < recipeSteps->Count()) {
+		// Get the ready steps
+		vector<Step*> readySteps = recipeSteps->GetReadySteps();
+		// For each ready step
+		for (size_t i = 0; i < readySteps.size(); ++i) {
+			// Mark it as running and create a timer for it
+			Step* step = readySteps.at(i);
+			step->running = true;
+			makeTimer(step, step->duration);
+		}
 	}
-	// Until all steps have been completed, check if steps are ready to be run and create a timer for them if so
-	/* End Section - 1 */
-
+	// All done, Enjoy!
 	cout << "Enjoy!" << endl;
 }
